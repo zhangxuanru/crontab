@@ -5,6 +5,7 @@ import (
 	"github.com/zhangxuanru/crontab/master"
 	"fmt"
 	"flag"
+	"time"
 )
 
 var(
@@ -34,15 +35,25 @@ func main()  {
 	if err = master.InitConfit(confFile);err!=nil{
 		goto ERR
 	}
+
+	//任务管理器
+	if err = master.InitJobMgr();err!=nil{
+		goto ERR
+	}
+
 	//启动API HTTP 服务
 	if err = master.InitApiServer(); err!=nil{
           goto ERR
 	}
+
+	for{
+       time.Sleep(1 * time.Second)
+	}
+
 	return
 
 	ERR:
 		fmt.Println(err)
-
 }
 
 
