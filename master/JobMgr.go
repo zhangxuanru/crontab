@@ -6,6 +6,7 @@ import (
 	"github.com/zhangxuanru/crontab/common"
 	"encoding/json"
 	"context"
+	"go.etcd.io/etcd/mvcc/mvccpb"
 )
 
 //任务管理器
@@ -89,6 +90,7 @@ func (JobMgr *JobMgr) DeleteJob(name string) (oldJob *common.Job,err error) {
       var(
       	jobKey string
       	delResp *clientv3.DeleteResponse
+	    oldJobObj common.Job
 	  )
       jobKey = common.JOB_SAVE_DIR+name
 
@@ -96,8 +98,35 @@ func (JobMgr *JobMgr) DeleteJob(name string) (oldJob *common.Job,err error) {
           return
 	  }
 	  if len(delResp.PrevKvs) != 0{
-	  	  json.Unmarshal(delResp.PrevKvs[0].Value,oldJob)
+	  	  json.Unmarshal(delResp.PrevKvs[0].Value,oldJobObj)
+		  oldJob = &oldJobObj
 	  }
 	  return
+}
+
+//任务列表
+func (JobMgr *JobMgr) ListJobs() (jobList []*common.Job,err error){
+	var(
+		dirKey string
+		getResp  *clientv3.GetResponse
+		kvPair  *mvccpb.KeyValue
+		job *common.Job
+	)
+	dirKey = common.JOB_SAVE_DIR
+
+	if getResp,err = JobMgr.kv.Get(context.TODO(),dirKey,clientv3.WithPrefix());err!=nil{
+		return
+	}
+
+	jobList = make([]*common.Job,0)
+	for _,kvPair = range getResp.Kvs{
+		// job = &common.Job{}
+       if err = json.Unmarshal(kvPair.Value,job);err!=nil{
+		    err = nil
+          	continue
+	   }
+		jobList = append(jobList,job)
+	}
+	return
 }
 

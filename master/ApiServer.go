@@ -78,7 +78,22 @@ ERR:
 
 //列举任务列表
 func handleJobList(w http.ResponseWriter, r *http.Request)  {
-	
+	var(
+		jobList []*common.Job
+		err error
+		bytes []byte
+	)
+	if jobList,err = G_jobMgr.ListJobs();err!=nil{
+		goto ERR
+	}
+
+	if bytes,err = common.BuildResponse(0,"success",jobList);err==nil{
+		w.Write(bytes)
+	}
+ERR:
+	if bytes,err = common.BuildResponse(-1,err.Error(),nil);err==nil{
+		w.Write(bytes)
+	}
 }
 
 
