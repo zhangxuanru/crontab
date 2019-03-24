@@ -12,6 +12,9 @@
   "etcdEndPoints":["127.0.0.1:2379"],
 
    "ETCD连接超时":"单位豪秒",
-   "etcdDialTimeOut":5000
+   "etcdDialTimeOut":5000,
+
+  "静态页面地址":"前后端分离",
+  "webroot":"./webroot"
 }
 
