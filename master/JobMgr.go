@@ -120,7 +120,7 @@ func (JobMgr *JobMgr) ListJobs() (jobList []*common.Job,err error){
 
 	jobList = make([]*common.Job,0)
 	for _,kvPair = range getResp.Kvs{
-		// job = &common.Job{}
+		 job = &common.Job{}
        if err = json.Unmarshal(kvPair.Value,job);err!=nil{
 		    err = nil
           	continue
