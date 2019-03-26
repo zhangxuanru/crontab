@@ -113,6 +113,7 @@ func handleJobKil(w http.ResponseWriter,r *http.Request)  {
   if bytes,err = common.BuildResponse(0,"success",nil);err==nil{
 		w.Write(bytes)
 	}
+	return
  ERR:
 	if bytes,err = common.BuildResponse(-1,err.Error(),nil);err==nil{
 		w.Write(bytes)

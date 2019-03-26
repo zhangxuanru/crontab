@@ -32,7 +32,7 @@ func main()  {
 	initEnv()
 
 	//加载配置
-	if err = master.InitConfit(confFile);err!=nil{
+	if err = master.InitConfig(confFile);err!=nil{
 		goto ERR
 	}
 
