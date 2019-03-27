@@ -6,7 +6,6 @@ import (
 	"context"
 	"github.com/zhangxuanru/crontab/common"
 	"go.etcd.io/etcd/mvcc/mvccpb"
-	"fmt"
 )
 
 //任务管理器
@@ -88,20 +87,14 @@ func InitJobMgr() (err error) {
 		}
   }
   go func() {
-  	fmt.Println("Revision:", getResp.Header.Revision)
-
-
 	  watchStartRevision = getResp.Header.Revision+1
       //监听/cron/jobs后续变化
+      //为什么要加版本号：
+      //watch 为默认就是从最新版本。但并发时就丢失数据了。在你get后，别人做更新了3次，然后你watch只能得到最后那次。
 	  watchChan =  G_jobMgr.watcher.Watch(context.TODO(),common.JOB_SAVE_DIR,clientv3.WithRev(watchStartRevision),clientv3.WithPrefix())
       //处理监听事件
       for watchResp = range watchChan{
 		  for _,watchEvent = range watchResp.Events{
-
-		  	fmt.Printf("%+v----%d",string(watchEvent.Kv.Value),watchResp.Header.Revision)
-		  	fmt.Println()
-
-
 			  switch watchEvent.Type {
 			  case mvccpb.PUT: //任务保存事件
 				  if job,err = common.UnpackJob(watchEvent.Kv.Value); err!=nil{
