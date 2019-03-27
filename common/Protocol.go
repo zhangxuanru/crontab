@@ -14,6 +14,7 @@ type Job struct {
     CronExpr string `json:"cronExpr"`     //cron 表达式
 }
 
+
 //任务调度计划
 type JobSchedulePlan struct {
     Job *Job
@@ -21,6 +22,13 @@ type JobSchedulePlan struct {
     NextTime time.Time //下次调度时间
 }
 
+
+//任务执行状态
+type JobExecuteInfo struct {
+        Job *Job               //任务信息
+        PlanTime time.Time     //理论调度时间
+        RealTime time.Time     //实际的调度时间
+}
 
 
 //HTTP 接口应答
@@ -30,10 +38,20 @@ type Response struct {
 	Data interface{} `json:"data"`
 }
 
+
 //变化事件
 type JobEvent struct {
 	EventType int //save  delete
 	Job *Job
+}
+
+//任务执行结果
+type JobExecuteResult struct {
+	ExecuteInfo *JobExecuteInfo
+	Output []byte
+	Err error
+	StartTime time.Time
+	EndTime time.Time
 }
 
 
@@ -93,3 +111,14 @@ func BuildJobSchedulePlan(job *Job)(jobSchedulePlan *JobSchedulePlan,err error) 
 	}
 	return
 }
+
+
+//构造 执行状态 信息
+func BuildJobExecuteInfo(plan *JobSchedulePlan) (jobExecuteInfo *JobExecuteInfo) {
+    return &JobExecuteInfo{
+    	Job:plan.Job,
+    	PlanTime:plan.NextTime,
+    	RealTime:time.Now(),
+	}
+}
+

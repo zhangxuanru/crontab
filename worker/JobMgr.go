@@ -105,12 +105,14 @@ func InitJobMgr() (err error) {
 			  G_scheduler.PushJobEvent(jobEvent)
 		  }
 	  }
-
-
   }()
-
   return
 }
 
-
+//创建任务执行锁
+func (jobMgr *JobMgr) CreateJobLock(jobName string) (jobLock *JobLock) {
+	//返回一把锁
+	jobLock = InitJobLock(jobName,jobMgr.kv,jobMgr.lease)
+	return
+}
 
