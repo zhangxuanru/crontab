@@ -23,6 +23,8 @@ var(
 func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent)  {
 	var(
 		jobSchedulePlan *common.JobSchedulePlan
+		jobExecuteInfo *common.JobExecuteInfo
+		jobIsExecute  bool
 		jobExists bool
 		err error
 	)
@@ -36,6 +38,10 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent)  {
          if jobSchedulePlan,jobExists = scheduler.jobPlanTable[jobEvent.Job.Name];jobExists{
          	  delete(scheduler.jobPlanTable,jobEvent.Job.Name)
 		 }
+	case common.JOB_EVENT_KILLER:
+		if jobExecuteInfo,jobIsExecute = scheduler.JobExecutingTable[jobEvent.Job.Name];jobIsExecute{
+			jobExecuteInfo.CancelFunc()  //强杀任务
+		}
 	}
 }
 
@@ -44,7 +50,7 @@ func (scheduler *Scheduler) handleJobResult(result *common.JobExecuteResult)  {
 	//删除执行状态
    delete(scheduler.JobExecutingTable,result.ExecuteInfo.Job.Name)
 
-   fmt.Println("执行结果:",result.ExecuteInfo.Job.Name,"output:",result.Output,"error:",result.Err)
+  // fmt.Println("执行结果:",result.ExecuteInfo.Job.Name,"output:",result.Output,"error:",result.Err)
 
 }
 
@@ -94,7 +100,7 @@ func (scheduler *Scheduler) TryStartJob(plan *common.JobSchedulePlan)  {
 	 	 jobExecuteStatus bool
 		)
 	if  jobExecuteInfo,jobExecuteStatus = scheduler.JobExecutingTable[plan.Job.Name];jobExecuteStatus{
-		fmt.Println("尚未退出，跳过执行")
+		  fmt.Println("尚未退出，跳过执行")
 		 return
 	}
 	jobExecuteInfo = common.BuildJobExecuteInfo(plan)
@@ -102,7 +108,6 @@ func (scheduler *Scheduler) TryStartJob(plan *common.JobSchedulePlan)  {
 	//执行任务
 	G_executor.ExecuteJob(jobExecuteInfo)
 }
-
 
 
 //调度协程

@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/zhangxuanru/crontab/common"
 	"go.etcd.io/etcd/mvcc/mvccpb"
+	"fmt"
 )
 
 //任务管理器
@@ -52,8 +53,11 @@ func InitJobMgr() (err error) {
 		watcher:watcher,
 	}
 
-	//启动监听
+	//启动监听任务
 	G_jobMgr.watchJobs()
+
+	//启动监听任务强杀
+	G_jobMgr.watchKiller()
 
 	return
 }
@@ -84,12 +88,20 @@ func InitJobMgr() (err error) {
 		}
   }
   go func() {
+  	fmt.Println("Revision:", getResp.Header.Revision)
+
+
 	  watchStartRevision = getResp.Header.Revision+1
       //监听/cron/jobs后续变化
 	  watchChan =  G_jobMgr.watcher.Watch(context.TODO(),common.JOB_SAVE_DIR,clientv3.WithRev(watchStartRevision),clientv3.WithPrefix())
       //处理监听事件
       for watchResp = range watchChan{
 		  for _,watchEvent = range watchResp.Events{
+
+		  	fmt.Printf("%+v----%d",string(watchEvent.Kv.Value),watchResp.Header.Revision)
+		  	fmt.Println()
+
+
 			  switch watchEvent.Type {
 			  case mvccpb.PUT: //任务保存事件
 				  if job,err = common.UnpackJob(watchEvent.Kv.Value); err!=nil{
@@ -108,6 +120,36 @@ func InitJobMgr() (err error) {
   }()
   return
 }
+
+
+//监听强杀任务
+func (jobMgr *JobMgr) watchKiller() (err error) {
+	var(
+		watchChan     clientv3.WatchChan
+		watchResp     clientv3.WatchResponse
+		watchEvent    *clientv3.Event
+		jobEvent      *common.JobEvent
+		jobName        string
+		job           *common.Job
+	)
+	go func() {
+		watchChan = G_jobMgr.watcher.Watch(context.TODO(),common.JOB_KILLER_DIR,clientv3.WithPrefix())
+		for watchResp = range watchChan{
+			for _,watchEvent = range watchResp.Events{
+				switch watchEvent.Type {
+				case mvccpb.PUT:
+					jobName = common.ExtractKillerJobName(string(watchEvent.Kv.Key))
+					job = &common.Job{Name:jobName}
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_KILLER,job)
+					G_scheduler.PushJobEvent(jobEvent)
+				}
+			}
+		}
+	}()
+	return
+}
+
+
 
 //创建任务执行锁
 func (jobMgr *JobMgr) CreateJobLock(jobName string) (jobLock *JobLock) {

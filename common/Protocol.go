@@ -5,6 +5,7 @@ import (
 	"strings"
 	"github.com/gorhill/cronexpr"
 	"time"
+	"context"
 )
 
 //定时任务
@@ -28,6 +29,8 @@ type JobExecuteInfo struct {
         Job *Job               //任务信息
         PlanTime time.Time     //理论调度时间
         RealTime time.Time     //实际的调度时间
+	    CancelFunc context.CancelFunc   //取消函数
+	    Context    context.Context      //取消事件
 }
 
 
@@ -87,6 +90,10 @@ func ExtractJobName(jobKey string)(string)  {
       return strings.TrimPrefix(jobKey,JOB_SAVE_DIR)
 }
 
+func ExtractKillerJobName(killKey string) (string) {
+	return strings.TrimLeft(killKey,JOB_KILLER_DIR)
+}
+
 
 //任务变化事件
 func BuildJobEvent(eventType int,job *Job)(jobEvent *JobEvent)  {
@@ -115,10 +122,12 @@ func BuildJobSchedulePlan(job *Job)(jobSchedulePlan *JobSchedulePlan,err error) 
 
 //构造 执行状态 信息
 func BuildJobExecuteInfo(plan *JobSchedulePlan) (jobExecuteInfo *JobExecuteInfo) {
-    return &JobExecuteInfo{
+	jobExecuteInfo =  &JobExecuteInfo{
     	Job:plan.Job,
     	PlanTime:plan.NextTime,
     	RealTime:time.Now(),
 	}
+	jobExecuteInfo.Context,jobExecuteInfo.CancelFunc = context.WithCancel(context.TODO())
+	return
 }
 
