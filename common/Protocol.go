@@ -58,6 +58,25 @@ type JobExecuteResult struct {
 }
 
 
+//任务执行结果日志
+type JobLog struct {
+	JobName string `bson:"jobName"`   //任务名
+	Command string `bson:"command"`   //脚本命令
+	Err     string `bson:"err"`       //执行的错误信息
+	OutPut  string `bson:"outPut"`    //执行的输出信息
+	PlanTime int64 `bson:"planTime"`   //计划开始时间
+	SchedulerTime int64 `bson:"schedulerTime"` //调度时间
+	StartTime  int64 `bson:"startTime"`        //任务开始执行时间
+	EndTime    int64  `bson:"endTime"`         //任务执行结束时间
+}
+
+//批量日志
+type BatchLog struct {
+	Logs []interface{}
+}
+
+
+
 //应答方法
 func BuildResponse(errno int,msg string,data interface{}) (resp []byte,err error) {
       var(

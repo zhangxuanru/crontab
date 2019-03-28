@@ -47,8 +47,30 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent)  {
 
 //处理任务执行结果
 func (scheduler *Scheduler) handleJobResult(result *common.JobExecuteResult)  {
+	var(
+		jobLog *common.JobLog
+	)
 	//删除执行状态
    delete(scheduler.JobExecutingTable,result.ExecuteInfo.Job.Name)
+
+   //记录执行日志
+   if result.Err != common.ERR_LOCK_EXISTS_ERROR{
+	   jobLog = &common.JobLog{
+            JobName:result.ExecuteInfo.Job.Name,
+            Command:result.ExecuteInfo.Job.Command,
+            OutPut:string(result.Output),
+            PlanTime:result.ExecuteInfo.PlanTime.UnixNano()/1000/1000,
+            SchedulerTime:result.ExecuteInfo.RealTime.UnixNano()/1000/1000,
+            StartTime:result.StartTime.UnixNano()/1000/1000,
+            EndTime:result.EndTime.UnixNano()/1000/1000,
+	   }
+	   if result.Err != nil{
+	        jobLog.Err = result.Err.Error()
+	   }
+	   //todo存储到mongodb
+
+   }
+
 
    fmt.Println("执行结果:",result.ExecuteInfo.Job.Name,"output:",result.Output,"error:",result.Err)
 
