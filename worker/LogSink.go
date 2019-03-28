@@ -1,17 +1,16 @@
 package worker
 
 import (
-	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/zhangxuanru/crontab/common"
-	"context"
 	"time"
+	"gopkg.in/mgo.v2"
 )
 
 //mongodb 记录日志
 
 type LogSink struct {
-	client *mongo.Client
-	logCollection *mongo.Collection
+	client *mgo.Session
+	logCollection *mgo.Collection
 	logChan chan *common.JobLog
 	autoCommitChan  chan *common.BatchLog
 }
@@ -22,14 +21,14 @@ var(
 
 func InitLogSink() (err error)  {
      var(
-     	client *mongo.Client
+     	client *mgo.Session
 	 )
-     if client,err = mongo.Connect(context.TODO(),G_config.MongoDbUrl);err!=nil{
-     	return
-	 }
+
+	client,err = mgo.Dial(G_config.MongoDbUrl)
+
 	 G_logSink = &LogSink{
 	 	client:client,
-	 	logCollection:client.Database("cron").Collection("log"),
+		logCollection:client.DB("cron").C("log"),
 	    logChan:make(chan *common.JobLog,1000),
 	    autoCommitChan:make(chan *common.BatchLog,1000),
 	 }
@@ -59,7 +58,6 @@ func (logSink *LogSink) writeLoop() {
                        logSink.autoCommitChan <- logs
 				  }
 				}(batchLog),
-
 				)
 			}
 
@@ -78,7 +76,7 @@ func (logSink *LogSink) writeLoop() {
 //批量保存日志
 func (logSink *LogSink) saveLogs(log *common.BatchLog) (err error) {
 	if len(log.Logs) > 0{
-	    logSink.logCollection.InsertMany(context.TODO(),log.Logs)
+		logSink.logCollection.Insert(log.Logs)
 	}
 	return
 }
