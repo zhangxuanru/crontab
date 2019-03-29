@@ -121,6 +121,44 @@ func handleJobKil(w http.ResponseWriter,r *http.Request)  {
  }
 
 
+ //查看日志接口
+func handleJobLog(w http.ResponseWriter, r *http.Request)  {
+	var(
+		err error
+		name string
+		skipParam string
+		limitParam string
+		skip int
+		limit int
+		logArr []*common.JobLog
+		bytes []byte
+	)
+	r.ParseForm()
+	name = r.Form.Get("name")
+	skipParam = r.Form.Get("skip")
+	limitParam = r.Form.Get("limit")
+	if skip,err = strconv.Atoi(skipParam);err!=nil{
+		skip = 0
+	}
+	if limit,err = strconv.Atoi(limitParam);err!=nil{
+		limit = 20
+	}
+	if logArr,err = G_logMgr.ListLog(name,skip,limit);err!=nil{
+		goto ERR
+	}
+	if bytes,err = common.BuildResponse(0,"success",logArr);err==nil{
+		w.Write(bytes)
+	}
+	return
+	ERR:
+		if bytes,err = common.BuildResponse(-1,err.Error(),nil);err==nil{
+			w.Write(bytes)
+		}
+
+}
+
+
+
 
 
 //初始化服务
@@ -138,6 +176,7 @@ func InitApiServer() (err error) {
 	mux.HandleFunc("/job/delete",handleJobDelete)
 	mux.HandleFunc("/job/list",handleJobList)
 	mux.HandleFunc("/job/kill",handleJobKil)
+	mux.HandleFunc("/job/log",handleJobLog)
 
 	staticHandler = http.FileServer(http.Dir(G_config.WebRoot))
 	mux.Handle("/",http.StripPrefix("/",staticHandler))

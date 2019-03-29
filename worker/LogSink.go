@@ -24,7 +24,9 @@ func InitLogSink() (err error)  {
      	client *mgo.Session
 	 )
 
-	client,err = mgo.Dial(G_config.MongoDbUrl)
+	if client,err = mgo.Dial(G_config.MongoDbUrl);err!=nil{
+		return
+	}
 
 	 G_logSink = &LogSink{
 	 	client:client,

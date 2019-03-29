@@ -60,14 +60,14 @@ type JobExecuteResult struct {
 
 //任务执行结果日志
 type JobLog struct {
-	JobName string `bson:"jobName"`   //任务名
-	Command string `bson:"command"`   //脚本命令
-	Err     string `bson:"err"`       //执行的错误信息
-	OutPut  string `bson:"outPut"`    //执行的输出信息
-	PlanTime int64 `bson:"planTime"`   //计划开始时间
-	SchedulerTime int64 `bson:"schedulerTime"` //调度时间
-	StartTime  int64 `bson:"startTime"`        //任务开始执行时间
-	EndTime    int64  `bson:"endTime"`         //任务执行结束时间
+	JobName string `json:"jobName" bson:"jobName"`   //任务名
+	Command string `json:"command" bson:"command"`   //脚本命令
+	Err     string `json:"err" bson:"err"`       //执行的错误信息
+	OutPut  string `json:"outPut" bson:"outPut"`    //执行的输出信息
+	PlanTime int64 `json:"planTime" bson:"planTime"`   //计划开始时间
+	SchedulerTime int64 `json:"schedulerTime" bson:"schedulerTime"` //调度时间
+	StartTime  int64 `json:"startTime" bson:"startTime"`        //任务开始执行时间
+	EndTime    int64  `json:"endTime" bson:"endTime"`         //任务执行结束时间
 }
 
 //批量日志
@@ -75,7 +75,15 @@ type BatchLog struct {
 	Logs []interface{}
 }
 
+//任务日志过虑条件
+type LogFilter struct {
+	JobName string `bson:"jobName"`
+}
 
+//任务日志排序条件
+type LogSort struct {
+    SortOrder int `bson:"startTime"`
+}
 
 //应答方法
 func BuildResponse(errno int,msg string,data interface{}) (resp []byte,err error) {

@@ -13,6 +13,7 @@ type Config struct {
 	EtcdEndPoints []string `json:"etcdEndPoints"`
 	EtcdDialTimeOut int `json:"etcdDialTimeOut"`
 	WebRoot string `json:"webroot"`
+	MongoDbUrl string `json:"mongoDbUrl"`
 }
 
 //配置单例
