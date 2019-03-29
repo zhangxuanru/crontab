@@ -68,12 +68,9 @@ func (scheduler *Scheduler) handleJobResult(result *common.JobExecuteResult)  {
 	        jobLog.Err = result.Err.Error()
 	   }
 	   //todo存储到mongodb
-
+	   G_logSink.Append(jobLog)
    }
-
-
-   fmt.Println("执行结果:",result.ExecuteInfo.Job.Name,"output:",result.Output,"error:",result.Err)
-
+    fmt.Println("执行结果:",result.ExecuteInfo.Job.Name,"output:",result.Output,"error:",result.Err)
 }
 
 

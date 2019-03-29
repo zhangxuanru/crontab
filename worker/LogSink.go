@@ -45,6 +45,7 @@ func (logSink *LogSink) writeLoop() {
 		log *common.JobLog
 		batchLog *common.BatchLog
 		commitTimer *time.Timer
+		timeOutBatch *common.BatchLog
 	)
 	for{
 		select {
@@ -60,25 +61,43 @@ func (logSink *LogSink) writeLoop() {
 				}(batchLog),
 				)
 			}
-
             //追加log
 			batchLog.Logs = append(batchLog.Logs,log)
 			//批次满了 就立即保存
 			if len(batchLog.Logs) >= G_config.JobLogBatchSize{
                   logSink.saveLogs(batchLog)
 				  batchLog = nil
+				  commitTimer.Stop()
 			}
-		}
 
+		 //自动保存chan
+		case timeOutBatch = <-logSink.autoCommitChan:
+			 if timeOutBatch != batchLog{
+			 	 continue   //跳过已经被提交的批次
+			 }
+		    logSink.saveLogs(timeOutBatch)
+		    batchLog=nil
+		}
 	}
 }
+
 
 //批量保存日志
 func (logSink *LogSink) saveLogs(log *common.BatchLog) (err error) {
 	if len(log.Logs) > 0{
-		logSink.logCollection.Insert(log.Logs)
+		err = logSink.logCollection.Insert(log.Logs...)
 	}
 	return
 }
+
+func (logSink *LogSink) Append(log *common.JobLog) {
+		select {
+			case logSink.logChan <- log:
+			default:
+				//队列满了就直接丢弃
+		}
+}
+
+
 
 
