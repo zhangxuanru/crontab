@@ -158,3 +158,8 @@ func BuildJobExecuteInfo(plan *JobSchedulePlan) (jobExecuteInfo *JobExecuteInfo)
 	return
 }
 
+
+func ExtractWorkerIp(regKey string) (ip string) {
+	return strings.TrimLeft(regKey,JOB_WORKER_DIR)
+}
+
